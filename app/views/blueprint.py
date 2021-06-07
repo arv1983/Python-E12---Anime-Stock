@@ -62,12 +62,16 @@ def get_create():
         query = cur.fetchall()
         table = ["id", "anime", "released_date", "seasons"]
         
-        response = {"data": [dict(zip(table, data)) for data in query]}
+        # response = {"data": [dict(zip(table, data)) for data in query]}
         
-        # response = [data['released_date'].strftime("%d/%m/%y") for data in response['data']]
+
+        response = [dict(zip(table, data)) for data in query]
         
-        # response['data'] = [data['released_date'].strftime("%d/%m/%y") for data in response['data']]
+
+
         finalizar_conn_cur(conn, cur)
+
+
         return jsonify(response)
 
 @bp.route('/animes/<int:anime_id>', methods=["GET"])
@@ -81,10 +85,9 @@ def filter(anime_id: str) -> dict:
     if not query or not anime_id:
         return {"error": "Not found"}
     table = ["id", "anime", "released_date", "seasons"]
-    response = {"data": [dict(zip(table, data)) for data in query]}
-    
-    
-    # response['data']['released_date'] = response['data']['released_date'].strftime("%d/%m/%y")
+    response = [dict(zip(table, data)) for data in query]
+    response[0]['released_date'] = response[0]['released_date'].strftime("%d/%m/%y")
+    response = {"data": response}
     return jsonify(response)
 
 
