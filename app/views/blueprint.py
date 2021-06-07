@@ -20,7 +20,7 @@ def get_create():
 
     
     
-
+        data['anime'] = data['anime'].title()
         try:
             cur.execute(
                 """
