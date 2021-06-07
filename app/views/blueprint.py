@@ -118,9 +118,8 @@ def update(anime_id: int) -> dict:
     if data.get('anime'):
         data['anime'] = data.get('anime')
 
-
-    print(data)
-
+    data['anime'] = data['anime'].title()
+    
     if not query:
         return {"error": "Not found"},404
 
@@ -132,17 +131,22 @@ def update(anime_id: int) -> dict:
             """,
             data
         )
+
         query = cur.fetchall()        
         finalizar_conn_cur(conn, cur)
-
+        print(query)
 
         table = ["id", "anime", "released_date", "seasons"]
-        response = dict(zip(table, data))
+        response = dict(zip(table, query[0]))
+        response['released_date'] = response['released_date'].strftime("%d/%m/%y")
+
+
         return jsonify(response)
 
     except KeyError as e:
-        print(KeyError)
-        return {"available_keys": ["anime", "released_date", "seasons"], "wrong_keys_sended": [e.args[0]]}, 422    
+        print('ssssssssssssssssssss')
+        print(e)
+        return {"available_keys": ["anime", "released_date", "seasons"], "wrong_keys_sended": [e.args[0]]}, 422
 
 
 
