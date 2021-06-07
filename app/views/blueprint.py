@@ -62,16 +62,13 @@ def get_create():
         query = cur.fetchall()
         table = ["id", "anime", "released_date", "seasons"]
         
-        # response = {"data": [dict(zip(table, data)) for data in query]}
-        
-
         response = [dict(zip(table, data)) for data in query]
-        
 
+        for data in response:
+            data['released_date'] = data['released_date'].strftime("%d/%m/%y")
 
+        response = {"data": response}
         finalizar_conn_cur(conn, cur)
-
-
         return jsonify(response)
 
 @bp.route('/animes/<int:anime_id>', methods=["GET"])
