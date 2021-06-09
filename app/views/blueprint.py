@@ -5,10 +5,6 @@ from datetime import datetime
 
 bp = Blueprint('example_blueprint', __name__)
 
-# @bp.route('/animes', methods=["GET"])
-# def get_create():
-#     return "This is an example app"
-
 @bp.route('/animes', methods=["POST", "GET"])
 def get_create():
 
@@ -126,7 +122,7 @@ def update(anime_id: int) -> dict:
     try:
         cur.execute(
             """
-                UPDATE anime SET anime=%(anime)s, seasons=%(seasons)s, released_date=%(released_date)s WHERE id = %(id)s
+                UPDATE anime SET anime=%(anime)s, seasons=%(seasons)s WHERE id = %(id)s
                 RETURNING *;
             """,
             data
@@ -144,9 +140,9 @@ def update(anime_id: int) -> dict:
         return jsonify(response)
 
     except KeyError as e:
-        print('ssssssssssssssssssss')
-        print(e)
-        return {"available_keys": ["anime", "released_date", "seasons"], "wrong_keys_sended": [e.args[0]]}, 422
+        
+        print(KeyError)
+        return {"available_keys": ["anime", "seasons"], "wrong_keys_sended": [e]}, 422
 
 
 
