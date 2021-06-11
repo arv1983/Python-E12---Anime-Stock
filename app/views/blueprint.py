@@ -5,33 +5,39 @@ from datetime import datetime
 
 bp = Blueprint('example_blueprint', __name__)
 
-# @bp.route('/animes', methods=["GET"])
-# def get_create():
-#     return "This is an example app"
-
 @bp.route('/animes', methods=["POST", "GET"])
 def get_create():
 
     conn, cur = conn_cur()
 
-    if request.method == 'POST':
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS anime
+            (
+                id BIGSERIAL PRIMARY KEY,
+                anime VARCHAR(100) NOT NULL UNIQUE,
+                released_date DATE NOT NULL,
+                seasons INTEGER NOT NULL
+            );
+        """
+    )
 
+
+    if request.method == 'POST':
         data = request.json
 
-    
-    
+
+        possible_vars = ["anime", "released_date", "seasons"]
+        if not all(name in possible_vars for name in data.keys()):
+            keys_w = {value for value in data.keys() if not value in possible_vars}
+            return {"available_keys": possible_vars, "wrong_keys_sended": list(keys_w)},422
+        
+                    
         data['anime'] = data['anime'].title()
+        
         try:
             cur.execute(
                 """
-                    CREATE TABLE IF NOT EXISTS anime
-                        (
-                            id BIGSERIAL PRIMARY KEY,
-                            anime VARCHAR(100) NOT NULL UNIQUE,
-                            released_date DATE NOT NULL,
-                            seasons INTEGER NOT NULL
-                        );
-                    
                     INSERT INTO anime
                         (anime, released_date, seasons)
                     VALUES
@@ -41,6 +47,7 @@ def get_create():
                 """,
                 data,
             )
+        
         except errors.UniqueViolation:
             return {"error": "anime is already exists"}, 422
         except KeyError as e:
@@ -107,49 +114,50 @@ def delete(anime_id: int) -> dict:
 @bp.route('/animes/<int:anime_id>', methods=["PATCH"])
 def update(anime_id: int) -> dict:
     data = request.json
+    possible_vars = ["anime", "released_date", "seasons"]
+    if not all(name in possible_vars for name in data.keys()):
+        keys_w = {value for value in data.keys() if not value in possible_vars}
+        return {"available_keys": possible_vars, "wrong_keys_sended": list(keys_w)},422
+    
     data['id'] = anime_id
     conn, cur = conn_cur()
     
     cur.execute("""SELECT * FROM anime WHERE id = %(id)s""", data)
     query = cur.fetchall()
-
-    if data.get('seasons'):
-        data['seasons'] = data.get('seasons')
-    if data.get('anime'):
-        data['anime'] = data.get('anime')
-
-    data['anime'] = data['anime'].title()
-    
     if not query:
         return {"error": "Not found"},404
-
-    try:
-        cur.execute(
-            """
-                UPDATE anime SET anime=%(anime)s, seasons=%(seasons)s, released_date=%(released_date)s WHERE id = %(id)s
-                RETURNING *;
-            """,
-            data
-        )
-
-        query = cur.fetchall()        
-        finalizar_conn_cur(conn, cur)
-        print(query)
-
-        table = ["id", "anime", "released_date", "seasons"]
-        response = dict(zip(table, query[0]))
-        response['released_date'] = response['released_date'].strftime("%d/%m/%y")
+    
+    table = ["id", "anime", "released_date", "seasons"]
+    response = [dict(zip(table, data)) for data in query][0]
 
 
-        return jsonify(response)
+    if not 'seasons' in data:
+        data['seasons'] = response['seasons']
+    if not 'released_date' in data:
+        data['released_date'] = response['released_date'].strftime("%d/%m/%y")
+    if not 'anime' in data:
+        data['anime'] = response['anime']
+    
+    data['anime'] = data['anime'].title()
+    
 
-    except KeyError as e:
-        print('ssssssssssssssssssss')
-        print(e)
-        return {"available_keys": ["anime", "released_date", "seasons"], "wrong_keys_sended": [e.args[0]]}, 422
+    
+    cur.execute(
+        """
+            UPDATE anime SET anime=%(anime)s, seasons=%(seasons)s, released_date=%(released_date)s WHERE id = %(id)s
+            RETURNING *;
+        """,
+        data
+    )
+
+    query = cur.fetchall()        
+    finalizar_conn_cur(conn, cur)
+    
+    table = ["id", "anime", "released_date", "seasons"]
+    response = dict(zip(table, query[0]))
+    response['released_date'] = response['released_date'].strftime("%d/%m/%y")
 
 
+    return jsonify(response),200
 
-
-
-        
+    

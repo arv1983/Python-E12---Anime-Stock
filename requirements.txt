@@ -1,0 +1,10 @@
+click==8.0.1
+environs==9.3.2
+Flask==2.0.1
+itsdangerous==2.0.1
+Jinja2==3.0.1
+MarkupSafe==2.0.1
+marshmallow==3.12.1
+psycopg2-binary==2.8.6
+python-dotenv==0.17.1
+Werkzeug==2.0.1
