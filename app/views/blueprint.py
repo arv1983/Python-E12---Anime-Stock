@@ -31,8 +31,8 @@ def get_create():
         if not all(name in possible_vars for name in data.keys()):
             keys_w = {value for value in data.keys() if not value in possible_vars}
             return {"available_keys": possible_vars, "wrong_keys_sended": list(keys_w)},422
-        
-                    
+
+
         data['anime'] = data['anime'].title()
         
         try:
